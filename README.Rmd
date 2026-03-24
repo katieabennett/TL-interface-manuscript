@@ -1,0 +1,36 @@
+---
+title: "README"
+author: "Kathryn Bennett"
+date: "2026-03-24"
+output: html_document
+---
+# Codes for the manuscript
+Opposing Responses of Carbon Dioxide and Methane Fluxes Following Thermokarst Erosion Across Tundra-Lake Interfaces in the Western Canadian Arctic 
+
+## Overview
+This repository contains the R codes and trimmed datasets used in the study "Opposing Responses of Carbon Dioxide and Methane Fluxes Following Thermokarst Erosion Across Tundra-Lake Interfaces in the Western Canadian Arctic", currently under review at AGU Journal of Geophysical Research: Biogeosciences. The R scripts and dataframes provided here replicate the data processing, visualization, and statistical analyses used to produce the results in the manuscript.
+
+## Data Availability
+The full dataset associated with this manuscript will be publically available at the Zenodo database prior to manuscript publication.The R scripts use trimmed versions of the complete dataset, which are available in this repository. 
+
+## Repository Structure
+The repository contains the following files:
+
+ghg_flux_plotting.RMD
+  Script to process, visualize, and apply statistical tests to net CO2, CH4, and N2O, and ecosystem respiration (ER) and gross primary production (GPP) fluxes. 
+  associated trimmed data file(s): allzones_ghgflux.csv
+
+LMMs_tundra_lake.RMD
+  Script to apply linear mixed effects models (LMMs) to tundra net CO2 and CH4 fluxes and lake net CO2, CH4, and N2O fluxes. 
+  associated trimmed data file(s): lake_lmmdata.csv, tundra_lmmdata.csv
+
+lit_value_comparison.RMD
+  Script to plot curated literature values and compare to values from this study. 
+  associated trimmed data file(s): tundra_lit_comparison_cleaned.csv, lake_lit_comparison_cleaned.csv
+  
+climate_normals_Inuvik.R
+  Script to download Environment Canada long-term climate data, compare to the study years, and plot monthly precipitation and air temperature data. 
+  associated trimmed data file(s): none
+
+## Citation
+If you use these scripts in your work, please cite the associated publication (citation to be updated upon manuscript publication).

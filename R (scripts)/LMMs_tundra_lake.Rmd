@@ -1,0 +1,471 @@
+---
+title: "Tundra and lake LMMs"
+author: "Kathryn Bennett"
+date: "2026-03-24"
+output: html_document
+---
+
+Linear mixed-effects models (LMMs) on tundra CO2 and CH4 fluxes
+& lake CO2, CH4, N2O fluxes
+
+load packages and data
+```{r}
+library("dplyr")
+library("lme4")
+library("sjPlot")
+
+tundra_lmmdata <- read.csv(file = "data/tundra_lmmdata.csv")
+lake_lmmdata <- read.csv(file = "data/lake_lmmdata.csv")
+```
+
+#################
+Tundra LMMs
+#################
+
+Visually assess normality
+```{r}
+hist(tundra_lmmdata$nee_mg_c_m2_h)
+qqnorm(tundra_lmmdata$nee_mg_c_m2_h)
+qqline(tundra_lmmdata$nee_mg_c_m2_h, col = "red")
+
+hist(tundra_lmmdata$ch4_mg_c_m2_h)
+qqnorm(tundra_lmmdata$ch4_mg_c_m2_h)
+qqline(tundra_lmmdata$ch4_mg_c_m2_h, col = "red")
+```
+
+
+FCO2 LMM
+```{r}
+#LMM
+og_lmm_nee <- lmer(nee_mg_c_m2_h ~  sampling_zone + vegetated +
+    vwc_perc_mean + frost_cm_mean + average_par_out + green_perc + average_t_out + (1 | site/collar_id), data = tundra_lmmdata)
+summary(og_lmm_nee)
+
+#calculate % variance explained by random effects - see random effects table in summary()
+#new vwc data
+1833/(1833+463+3008)*100 #34% explained by collar_id:site
+463/(1833+463+3008)*100 #9% explained by site alone
+3008/(1833+463+3008)*100 #57% explained by fixed effects
+
+#examine residuals
+par(mfrow = c(1, 1))
+plot(og_lmm_nee, col = "black", xlab = expression("fitted tundra F"[CO2]~"values (mg C m"^-2~"h"^-1*")"), ylab = "residuals")
+qqnorm(resid(og_lmm_nee), main = "Q-Q plot")
+qqline(resid(og_lmm_nee), col = "red") #good, fit straight line
+
+#visualize table of results
+tab_model(og_lmm_nee,
+          show.p = FALSE, #no p-values, calculated below with Likelihood Ratios
+  show.stat = TRUE, #t value  
+  show.df = TRUE #show degrees of freedom
+  )
+```
+
+FCO2 continued: calcualte p-values using likelihood ratio tests (ANOVA)
+```{r}
+## Likelihood ratio tests: testing removal of each variable to determine significance 
+
+#full model, note: REML = F
+Form1 <- formula(nee_mg_c_m2_h ~  sampling_zone + vegetated + vwc_perc_mean + frost_cm_mean + average_par_out + green_perc + average_t_out + (1 | site/collar_id))
+M1.Full <- lmer(Form1, data = tundra_lmmdata, REML = F)
+
+#test removing each fixed effect 
+
+M1.A <- update(M1.Full, .~. -sampling_zone) #remove sampling_zone 
+anova(M1.Full, M1.A) #compare to full model
+  
+M1.B <- update(M1.Full, .~. -vegetated) #remove vegetated
+anova(M1.Full, M1.B) #compare to full model
+
+#remove vwc NAs to compare datasets of the same size
+tundra_novwcNA <- tundra_lmmdata[!is.na(tundra_lmmdata$vwc_perc_mean), ]
+M1.Full.vwc <- lmer(nee_mg_c_m2_h ~  sampling_zone + vegetated + vwc_perc_mean + frost_cm_mean + average_par_out + green_perc + average_t_out + (1 | site/collar_id),
+             data = tundra_novwcNA, REML = F)
+M1.C <- update(M1.Full.vwc, .~. -vwc_perc_mean) #remove vwc
+anova(M1.Full.vwc, M1.C) #compare to full model
+
+#frost impacts data size, remove all NA rows from frost to compare 2 dfs of the same size
+tundra_nofrostNA <- tundra_lmmdata[!is.na(tundra_lmmdata$frost_cm_mean), ]
+M1.Full.frost <- lmer(nee_mg_c_m2_h ~  sampling_zone + vegetated + vwc_perc_mean + frost_cm_mean + average_par_out + green_perc + average_t_out + (1 | site/collar_id),
+             data = tundra_nofrostNA, REML = F)
+M1.D <- update(M1.Full.frost, .~. -frost_cm_mean)
+anova(M1.Full.frost, M1.D) #compare to full model
+
+M1.E <- update(M1.Full, .~. -average_par_out) #remove par
+anova(M1.Full, M1.E)
+  #not significant p = 0.4936, X2 = 0.4686
+M1.F <- update(M1.Full, .~. -average_t_out) #remove air T
+anova(M1.Full, M1.F) #compare to full model
+
+# removing NAs for greenness to compare 2 dfs of the same size
+tundra_nogreenNA <- tundra_lmmdata[!is.na(tundra_lmmdata$green_perc), ]
+M1.Full.green <- lmer(nee_mg_c_m2_h ~  sampling_zone + vegetated + vwc_perc_mean + frost_cm_mean + average_par_out + green_perc + average_t_out + (1 | site/collar_id),
+             data = tundra_nogreenNA, REML = F)
+
+M1.G <- update(M1.Full.green, .~. -green_perc) #remove greenness
+anova(M1.Full.green, M1.G) #compare to full model
+
+```
+
+
+CH4 LMM
+```{r}
+#LMM
+lmm_ch4 <- lmer(ch4_mg_c_m2_h ~  sampling_zone + vegetated +
+    vwc_perc_mean + frost_cm_mean + average_t_out + green_perc + (1 | site/collar_id), data = tundra_lmmdata)
+
+summary(lmm_ch4)
+
+#examine residuals
+plot(lmm_ch4, col = "black", xlab = expression("fitted tundra F"[CH4]~"values (mg C m"^-2~"h"^-1*")"), ylab = "residuals")
+qqnorm(resid(lmm_ch4), main = "Q-Q plot")
+qqline(resid(lmm_ch4), col = "red") 
+
+#relative % of variance explained by random effects
+(2.296e-05/(2.296e-05+3.345e-05+3.459e-04))*100 #6% explained by collar_id:site
+(3.345e-05/(2.296e-05+3.345e-05+3.459e-04))*100 #8% explained by site
+(3.459e-04/(2.296e-05+3.345e-05+3.459e-04))*100 #86% explained by fixed effects
+
+#visualize table of results
+tab_model(lmm_ch4,
+          show.p = FALSE, 
+  show.stat = TRUE, #t value  
+  show.df = TRUE, #show degrees of freedom
+ digits = 4) #digits after the decimal
+```
+
+Calculate p-values
+```{r}
+#likelihood ratio tests
+
+#full model
+tch4.form1 <- formula(ch4_mg_c_m2_h ~  sampling_zone + vegetated +
+    vwc_perc_mean + frost_cm_mean + green_perc + average_t_out + (1 | site/collar_id))
+tch4.full <- lmer(tch4.form1, data = tundra_lmmdata, REML = F)
+
+#test removing each fixed effect 
+
+tch4.a <- update(tch4.full, .~. -sampling_zone) #remove sampling zone
+anova(tch4.full, tch4.a) #compare to full model
+
+tch4.b <- update(tch4.full, .~. -vegetated) #vegetated y or n
+anova(tch4.full, tch4.b) #compare to full model
+ 
+# removing NAs of VWC to compare dfs of the same size
+tundra_novwcNA <- tundra_lmmdata[!is.na(tundra_lmmdata$vwc_perc_mean), ]
+tch4.full.vwc <- lmer(ch4_mg_c_m2_h ~  sampling_zone + vegetated +
+    vwc_perc_mean + frost_cm_mean + green_perc + average_t_out + (1 | site/collar_id), data = tundra_novwcNA, REML = F)
+tch4.c <- update(tch4.full.vwc, .~. -vwc_perc_mean) #remove VWC
+anova(tch4.full.vwc, tch4.c) #compare to full model
+
+# removing NAs of frost table to compare dfs of the same size
+tundra_nofrostNA <- tundra_lmmdata[!is.na(tundra_lmmdata$frost_cm_mean), ]
+tch4.full.frost <- lmer(ch4_mg_c_m2_h ~  sampling_zone + vegetated +
+    vwc_perc_mean + frost_cm_mean + green_perc + average_t_out + (1 | site/collar_id), data = tundra_nofrostNA, REML = F)
+tch4.d <- update(tch4.full.frost, .~. -frost_cm_mean) #remove frost table
+anova(tch4.full.frost, tch4.d) #compare to full model
+
+#remove NAs from greenness to compare dfs of the same size
+tundra_nogreenNA <- tundra_lmmdata[!is.na(tundra_lmmdata$green_perc), ]
+tch4.full.green <- lmer(ch4_mg_c_m2_h ~  sampling_zone + vegetated + vwc_perc_mean + frost_cm_mean + green_perc + average_t_out + (1 | site/collar_id),
+             data = tundra_nogreenNA, REML = F)
+tch4.e <- update(tch4.full.green, .~. -green_perc) #remove greenness
+anova(tch4.full.green, tch4.e) #compare to full model
+
+
+tch4.f <- update(tch4.full, .~. -average_t_out) #remove air temp
+anova(tch4.full, tch4.f) #compare to full model
+
+```
+
+#################
+Lake LMMs
+#################
+
+Lake FCO2 LMM
+```{r}
+#LMM for lake CO2
+co2_lake_m1 <- lmer(co2_mg_c_m2_h ~ tsurf_water_degc + cond_uscm.1 + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_lmmdata)
+summary(co2_lake_m1) 
+
+#examine residuals
+plot(co2_lake_m1, col = "black", xlab = expression("fitted lake F"[CO2]~"values (mg C m"^-2~"h"^-1*")"), ylab = "residuals")
+qqnorm(resid(co2_lake_m1), main = "Q-Q plot")
+qqline(resid(co2_lake_m1), col = "red") #good, fit straight line
+
+#% variance calculation
+  #0 % variance explained by individual plots
+(40.57/(40.57+141.1))*100 #22% explained by zone (center, undist, dist); 
+  #0% explained by site aka lake
+(141.1/(40.57+141.1))*100 #78% explained by fixed effects
+
+#visualize table of outputs
+tab_model(co2_lake_m1,
+          show.p = FALSE, #no p-values, calculated with likelihood ratio 
+  show.stat = TRUE, #t value  
+  show.df = TRUE, #show degrees of freedom
+ digits = 2)
+
+```
+
+likelihood ratio tests - co2 model
+note: see tundra LRTs for more thorough commenting explaining code steps
+```{r}
+#full model, note: REML = F
+Form1 <- formula(co2_mg_c_m2_h ~ tsurf_water_degc + cond_uscm.1 + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no))
+Lco2.full <- lmer(Form1, data = lake_lmmdata, REML = F)
+
+#remove each fixed effect
+
+Lco2.A <- update(Lco2.full, .~. -tsurf_water_degc) #remove twater
+anova(Lco2.full, Lco2.A)
+
+#remove EC NAs to compare dfs of the same size
+lake_noEC <- lake_lmmdata[!is.na(lake_lmmdata$cond_uscm.1),]
+Lco2.full.ec <- lmer(co2_mg_c_m2_h ~ tsurf_water_degc + cond_uscm.1 + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_noEC, REML = F)
+Lco2.B <- update(Lco2.full.ec, .~. -cond_uscm.1) #remove EC
+anova(Lco2.full.ec, Lco2.B)
+  
+#remove DO NAs to compare dfs of the same size
+lake_nodoNA <- lake_lmmdata[!is.na(lake_lmmdata$do_mgl.1),]
+Lco2.full.do <- lmer(co2_mg_c_m2_h ~ tsurf_water_degc + cond_uscm.1 + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_nodoNA, REML = F)
+Lco2.D <- update(Lco2.full.do, .~. -do_mgl.1) #remove DO
+anova(Lco2.full.do, Lco2.D)
+  
+
+Lco2.E <- update(Lco2.full, .~. -disturbance) #remove disturbance
+anova(Lco2.full, Lco2.E)
+  
+Lco2.F <- update(Lco2.full, .~. -area_km2) #remove area
+anova(Lco2.full, Lco2.F)
+
+Lco2.G <- update(Lco2.full, .~. -depth_m) #remove depth
+anova(Lco2.full, Lco2.G)
+
+```
+
+
+LMM on lake CH4
+
+```{r}
+hist(lake_lmmdata$ch4_mg_c_m2_h)
+#transform ch4
+lake_lmmdata$ch4_cuberoot <- sign(lake_lmmdata$ch4_mg_c_m2_h) * abs(lake_lmmdata$ch4_mg_c_m2_h)^(1/3)
+print(lake_lmmdata$ch4_cuberoot)
+hist(lake_lmmdata$ch4_cuberoot)
+```
+
+CH4, Model 1
+```{r}
+#model 1
+ch4_lake_m1 <- lmer(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_lmmdata)
+summary(ch4_lake_m1) 
+
+#examine residuals
+plot(ch4_lake_m1, col = "black",xlab = expression(atop("fitted lake (F"[CH4]*")"^(1/3)~"values",
+  "(mg C m"^-2~"h"^-1*") from model 1")), 
+  ylab = "residuals" )
+qqnorm(resid(ch4_lake_m1), main = "Q-Q plot")
+qqline(resid(ch4_lake_m1), col = "red")
+
+#variance percentages
+((0.039242)/(0.039242+0.286660+0.006439+0.335162))*100 #6% explained by chamber no
+((0.286660)/(0.039242+0.286660+0.006439+0.335162))*100 # 43% explained by sampling zone
+((0.006439)/(0.039242+0.286660+0.006439+0.335162))*100 # 1% explained by lake
+((0.335162)/(0.039242+0.286660+0.006439+0.335162))*100 #50% explained by fixed effects
+
+
+#visualize table of outputs **data still transformed**
+tab_model(ch4_lake_m1,
+          show.p = FALSE, #no p-values 
+  show.stat = TRUE, #t value  
+  show.df = TRUE, #show degrees of freedom
+ digits = 4)
+```
+
+likelihood ratios for CH4 Model 1 aka ch4_lake_m1
+```{r}
+#full model
+Form2 <- formula(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no))
+M1ch4.full <- lmer(Form2, data = lake_lmmdata, REML = F)
+
+# test removal of fixed effects
+
+lake_nophNA <- lake_lmmdata[!is.na(lake_lmmdata$ph),]
+M1ch4.full.ph <- lmer(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_nophNA, REML = F)
+M1ch4.A <- update(M1ch4.full.ph, .~. -ph) #remove ph
+anova(M1ch4.full.ph, M1ch4.A)
+
+lake_nodoNA <- lake_lmmdata[!is.na(lake_lmmdata$do_mgl.1),]
+M1ch4.full.do <- lmer(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_nodoNA, REML = F)
+M1ch4.B <- update(M1ch4.full.do, .~. -do_mgl.1) #remove do
+anova(M1ch4.full.do, M1ch4.B)
+
+M1ch4.C <- update(M1ch4.full, .~. -tsurf_water_degc) #remove Twater
+anova(M1ch4.full, M1ch4.C)
+
+M1ch4.D <- update(M1ch4.full, .~. -cond_uscm.1) #remove conductivity
+anova(M1ch4.full, M1ch4.D)
+
+M1ch4.E <- update(M1ch4.full, .~. -disturbance) #remove disturbance
+  anova(M1ch4.full, M1ch4.E)
+
+M1ch4.F <- update(M1ch4.full, .~. -area_km2) #remove area
+  anova(M1ch4.full, M1ch4.F)
+
+M1ch4.G <- update(M1ch4.full, .~. -depth_m) #remove depth
+  anova(M1ch4.full, M1ch4.G)
+
+```
+
+
+Lake CH4, Model 2 LMM
+
+```{r}
+#second viable model, removes DO (NA = 72), ph (NA = 52) to use larger dataset. Keeping EC, different sensor on pH probe
+#119 observations in previous model, 206 in this model
+
+ch4_lake_m2 <- lmer(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_lmmdata)
+summary(ch4_lake_m2)
+
+#examine residuals
+plot(ch4_lake_m2, col = "black",xlab = expression(atop("fitted lake (F"[CH4]*")"^(1/3)~"values",
+  "(mg C m"^-2~"h"^-1*") from model 2")), ylab = "residuals" )
+qqnorm(resid(ch4_lake_m2), main = "Q-Q plot")
+qqline(resid(ch4_lake_m2), col = "red")
+
+#variances
+(0.04183/(0.04183+.13955+0+.34232))*100 #8% explained by chamber
+(.13955/(0.04183+.13955+0+.34232))*100 # 27% explained by zone; 0% by lake
+(.34232/(0.04183+.13955+0+.34232))*100 # 65% explained by fixed effects
+
+#visualize table of outputs **data still transformed**
+tab_model(ch4_lake_m2,
+          show.p = FALSE, #no p-values 
+  show.stat = TRUE, #t value  
+  show.df = TRUE, #show degrees of freedom
+ digits = 4)
+
+```
+
+likelihood ratios for CH4 Model 2 (no DO, pH)
+```{r}
+# full model
+Form3 <- formula(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no))
+M2ch4.full <- lmer(Form3, data = lake_lmmdata, REML = F)
+
+#test removal of fixed effects
+
+#get rid of Twater NAs to test dfs of the same size
+lake_noTNA <- lake_lmmdata[!is.na(lake_lmmdata$tsurf_water_degc),]
+M2ch4.full.T <- lmer(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1+ disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_noTNA, REML = F)
+M2ch4.A <- update(M2ch4.full.T, .~. -tsurf_water_degc) #remove Twater
+anova(M2ch4.full.T, M2ch4.A)
+
+#get rid of EC NAs to test dfs of the same size
+lake_noECNA <- lake_lmmdata[!is.na(lake_lmmdata$cond_uscm.1),]
+M2ch4.full.EC <- lmer(ch4_cuberoot ~ tsurf_water_degc + cond_uscm.1+ disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_noECNA, REML = F)
+M2ch4.B <- update(M2ch4.full.EC, .~. -cond_uscm.1) #remove EC
+  anova(M2ch4.full.EC, M2ch4.B)  
+
+M2ch4.C <- update(M2ch4.full, .~. -disturbance) #remove disturbance
+  anova(M2ch4.full, M2ch4.C)  
+
+M2ch4.D <- update(M2ch4.full, .~. -area_km2) #remove area
+  anova(M2ch4.full, M2ch4.D)
+
+M2ch4.E <- update(M2ch4.full, .~. -depth_m) #remove depth
+  anova(M2ch4.full, M2ch4.E)
+
+```
+
+
+Lake N2O LMM
+
+```{r}
+hist(lake_lmmdata$n2o_mg_m2_h)
+
+#cube root transformation
+lake_lmmdata$n2o_cuberoot <- sign(lake_lmmdata$n2o_mg_m2_h) * abs(lake_lmmdata$n2o_mg_m2_h)^(1/3)
+
+print(lake_lmmdata$n2o_cuberoot)
+hist(lake_lmmdata$n2o_cuberoot) 
+
+#LMM with transformed n2o
+lake_n2o_m1 <- lmer(n2o_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no),
+             data = lake_lmmdata, REML= T)
+summary(lake_n2o_m1)
+
+#examine residuals
+plot(lake_n2o_m1, col = "black", xlab =expression("fitted lake (F"[N2O]*")"^(1/3)~"values (mg m"^-2~"h"^-1*")"), ylab = "residuals") #much better
+qqnorm(resid(lake_n2o_m1), main = "Q-Q plot")
+qqline(resid(lake_n2o_m1), col = "red")
+
+#calculate variances
+(0.009042/(0.009042+0.05528+0.08446))*100 #6% variance explained by zone; 0% by chamber
+(0.05528/(0.009042+0.05528+0.08446))*100 #37% variance explained by site aka lake
+(0.08446/(0.009042+0.05528+0.08446))*100 #57% explained by fixed effects
+
+#visualize table of outputs **data still transformed**
+tab_model(lake_n2o_m1,
+          show.p = FALSE, #no p-values
+  show.stat = TRUE, #t value
+  show.df = TRUE, #show degrees of freedom
+ digits = 4)
+
+```
+
+likelihood ratios for N2O LMM
+```{r}
+#full model
+Form4 <- formula(n2o_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no))
+Mn2o.full <- lmer(Form4, data = lake_lmmdata, REML = F)
+
+#test removal of fixed effects
+
+Mn2o.C <- update(Mn2o.full, .~. -tsurf_water_degc) #remove Twater
+  anova(Mn2o.full, Mn2o.C)
+  
+Mn2o.D <- update(Mn2o.full, .~. -cond_uscm.1) #remove conductivity
+  anova(Mn2o.full, Mn2o.D)
+ 
+#get rid of pH NAs to test dfs of the same size
+lake_nophNA <- lake_lmmdata[!is.na(lake_lmmdata$ph),] #repeated from co2
+Mn2o.full.ph <- lmer(n2o_cuberoot ~ tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_nophNA, REML = F)
+Mn2o.E <- update(Mn2o.full.ph, .~. -ph) #remove ph
+  anova(Mn2o.full.ph, Mn2o.E)
+ 
+#get rid of DO NAs to test dfs of the same size
+lake_nodoNA <- lake_lmmdata[!is.na(lake_lmmdata$do_mgl.1),] #repeated from co2
+Mn2o.full.do <- lmer(n2o_cuberoot ~tsurf_water_degc + cond_uscm.1 + ph + do_mgl.1 + disturbance + area_km2 + depth_m +
+             (1|site/sampling_zone/chamber_no), data = lake_nodoNA, REML = F)
+Mn2o.F <- update(Mn2o.full.do, .~. -do_mgl.1) #remove DO
+  anova(Mn2o.full.do, Mn2o.F)
+ 
+
+Mn2o.G <- update(Mn2o.full, .~. -disturbance) #remove disturbance
+  anova(Mn2o.full, Mn2o.G)
+ 
+Mn2o.H <- update(Mn2o.full, .~. -area_km2) #remove area
+  anova(Mn2o.full, Mn2o.H)
+
+Mn2o.I <- update(Mn2o.full, .~. -depth_m) #remove depth
+  anova(Mn2o.full, Mn2o.I)
+
+```
+

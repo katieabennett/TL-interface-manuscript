@@ -1,0 +1,659 @@
+---
+title: "ghg flux plotting"
+author: "Kathryn Bennett"
+date: "2026-03-23"
+output: html_document
+---
+Greenhouse gas (CO2, CH4, N2O) flux plotting
+Create Figures 2, 3, S3, S4 and associated statistical analyses, and Table S5
+
+Load packages and dataset
+```{r}
+library('dplyr')
+library("ggplot2")
+library("patchwork")
+library("agricolae") #for kruskal-wallis with post-hoc test letter groupings
+library("car") #for levene test, non-normal variance test
+library("scales") #for plotting with log scales
+
+
+#all ghg fluxes, all sampling zones
+allzones_ghgflux <- read.csv(file = "data/allzones_ghgflux.csv")
+summary(allzones_ghgflux)
+```
+
+format sampling_date and columns
+```{r}
+#format samplnig_date
+allzones_ghgflux$sampling_date <- as.POSIXct(allzones_ghgflux$sampling_date, format = "%m/%d/%Y", tz = "MST")
+
+#format sample location info as factors
+allzones_ghgflux <- allzones_ghgflux %>%
+  mutate(across(c(2:7), as.factor))
+```
+
+###################
+Create Figure 2
+###################
+
+Setting up plotting aesthetics
+```{r}
+#create manual labels and ordering
+zone_order <- c("tundra_undisturbed", "tundra_disturbed", "lake_disturbed","lake_center", "lake_undisturbed") #set display order of zones
+labels_tz <- c("Stable tundra", "Eroding tundra", "Eroding lake shore", "Lake center", "Stable lake shore") #manual labels
+
+#for plots of tundra only
+zone_order_tundra <- c("tundra_undisturbed", "tundra_disturbed")
+labels_tz_tundra <- c("Stable tundra", "Eroding tundra") #manual labels
+
+#for plots of lake only
+zone_order_lake <- c("lake_disturbed","lake_center","lake_undisturbed")
+labels_tz_lake <- c("Eroding lake shore","Lake center", "Stable lake shore") #manual labels
+
+#create customized color palette
+pal_option2 <- c(tundra_undisturbed = "#FDAE6B", tundra_disturbed = "#E6550D", lake_disturbed = "#3182BD", lake_center = "#9ECAE1", lake_undisturbed = "#DEEBF7" )
+```
+
+Plot data
+```{r}
+#CO2 plots
+
+# Calculate minimum y-value AND sample size for each group to add figure annotations
+ann_pos <- allzones_ghgflux %>% 
+  group_by(type_zone) %>% 
+  summarise(
+    ymin = min(co2_mg_c_m2_h, na.rm = TRUE),
+    n = sum(!is.na(co2_mg_c_m2_h))   # counts non-NA co2 values
+  ) %>% 
+  mutate(
+    x = factor(type_zone, levels = zone_order),
+    y1 = ymin - 0.1 * diff(range(allzones_ghgflux$co2_mg_c_m2_h, na.rm = TRUE)),  
+    y2 = ymin - 0.2 * diff(range(allzones_ghgflux$co2_mg_c_m2_h, na.rm = TRUE))  
+  )
+# now the plot
+bp1_co2 <- ggplot(allzones_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order), 
+                      y = co2_mg_c_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone",
+                    breaks = zone_order, labels = labels_tz) +
+  xlab(NULL) +
+  ylab(expression(F[CO2]~(mg~C~m^{-2}~h^{-1}))) +
+
+  # Kruskal-Wallis letter groupings (first annotation line)
+  geom_text(data = ann_pos,
+            aes(x = x, y = y1, label = c("ab","a","a","c","b")), #in alphabetical order by type_zone
+            size = 4) +
+
+  # dynamic sample counts (second annotation line)
+  geom_text(data = ann_pos,
+            aes(x = x, y = y2, label = n),
+            fontface = "italic", size = 4) +
+
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12))
+
+
+## CH4 plots
+#create a log scale for the plot
+pseudoLog <- scales::pseudo_log_trans(base = 10)
+
+# get data vector and transformed range
+vals <- allzones_ghgflux$ch4_mg_c_m2_h
+tr_min <- pseudoLog$transform(min(vals, na.rm = TRUE))
+tr_max <- pseudoLog$transform(max(vals, na.rm = TRUE))
+tr_range <- tr_max - tr_min
+
+# choose an offset for annotation placement in TRANSFORMED units 
+offset_tr <- 0.1 * tr_range
+
+# compute annotation positions in data space by working in transformed space
+ann_pos_ch4 <- allzones_ghgflux %>% 
+  group_by(type_zone) %>% 
+  summarise(
+    ymin = min(ch4_mg_c_m2_h, na.rm = TRUE),
+    n = sum(!is.na(ch4_mg_c_m2_h))   # counts non-NA values
+  ) %>% 
+  mutate(
+    x = factor(type_zone, levels = zone_order),
+    tr_ymin = pseudoLog$transform(ymin),
+    # subtract offsets in transformed space, then invert back
+    y1 = pseudoLog$inverse(tr_ymin - offset_tr),
+    y2 = pseudoLog$inverse(tr_ymin - 2 * offset_tr)
+  )
+
+# Plot using those positions
+bp1_ch4 <- ggplot(allzones_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order), 
+                      y = ch4_mg_c_m2_h)) +
+  geom_boxplot(aes(fill = type_zone)) +
+  scale_fill_manual(values = pal_option2, name = "Sampling zone",
+                    breaks = zone_order, labels = labels_tz) +
+  xlab(NULL) +
+  ylab(expression(F[CH4]~(mg~C~m^{-2}~h^{-1}))) +
+  scale_y_continuous(trans = pseudoLog,
+                     breaks = c(-5, -1, 0, 1, 5, 10, 20, 30)) + 
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+
+  # Kruskal-Wallis letter groupings (first annotation line)
+  geom_text(data = ann_pos_ch4,
+            aes(x = x, y = y1, label = c("a","a","b","c","d")), #in alphabetical order by type_zone
+            size = 4) +
+
+  # dynamic sample sizes (second stacked annotation)
+  geom_text(data = ann_pos_ch4,
+            aes(x = x, y = y2, label = n),
+            fontface = "italic", size = 4) +
+
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12))
+
+
+#CH4 data zoomed in for inset plot
+bp1_ch4_zoomed <- ggplot(allzones_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order), 
+                      y = ch4_mg_c_m2_h)) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone", breaks = zone_order, labels = labels_tz) +
+  xlab(NULL) +
+  ylab(NULL) +
+  scale_y_continuous(position = "right", limits = c(-0.1, 0.1))+
+  xlim(c("tundra_undisturbed", "tundra_disturbed"))+ #axis limits to show only tundra
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none") 
+
+#assemble ch4 plot with zoomed tundra inset
+ch4_zoomcombo <- bp1_ch4 + inset_element(bp1_ch4_zoomed, left = 0.01, bottom = 0.5, right = 0.475, top = 0.995)+
+  theme(axis.text = element_text(size = 11), axis.title = element_text(size = 12),
+        plot.margin = margin(t = 1, r = 2, b = 1, l = 2)  # reduce whitespace
+        )
+
+
+## N2O 
+# Calculate minimum y-value AND sample size for each group
+ann_pos_n2o <- allzones_ghgflux %>% 
+  group_by(type_zone) %>% 
+  summarise(
+    ymin = min(n2o_mg_m2_h, na.rm = TRUE), #calc minimum
+    n = sum(!is.na(n2o_mg_m2_h))   # counts non-NA values
+  ) %>% 
+  mutate(
+    x = factor(type_zone, levels = zone_order), #create x and y coordinates for annotations
+    y1 = ymin - 0.05 * diff(range(allzones_ghgflux$n2o_mg_m2_h, na.rm = TRUE)),  
+    y2 = ymin - 0.08 * diff(range(allzones_ghgflux$n2o_mg_m2_h, na.rm = TRUE))  
+  )
+
+#plot
+bp1_n2o <- ggplot(allzones_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order), 
+                      y = n2o_mg_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", linewidth = 0.5) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone", breaks = zone_order, labels = labels_tz) +
+  xlab(NULL) +
+  ylab(expression(F[N2O]~ (mg~m^{-2}~h^{-1}))) +
+  scale_y_continuous(limits = c(-0.3, 0.3),
+                     breaks = seq(-0.3, 0.3, by = 0.1),
+                     labels = scales::number_format(accuracy = 0.1)) +
+  # Kruskal-Wallis letter (first annotation line)
+  geom_text(data = ann_pos_n2o,
+            aes(x = x, y = y1, label = c("b","a","a","ab","ab")), #in alphabetical order by type_zone
+            size = 4) +
+
+  # dynamic sample counts (second annotation line)
+  geom_text(data = ann_pos_n2o,
+            aes(x = x, y = y2, label = n),
+            fontface = "italic", size = 4) +
+  
+  scale_x_discrete(labels = labels_tz, guide = guide_axis(angle = 45)) + #rotate x-axis labels 45 deg
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12), 
+        legend.position = "none")
+
+
+#zoomed out N2O data, for inset plot
+bp1_n2o_zoomout <- ggplot(allzones_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order), 
+                      y = n2o_mg_m2_h)) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone", breaks = zone_order, labels = labels_tz) +
+  xlab(NULL) +
+  ylab(NULL) +
+  xlim(c("lake_disturbed","lake_center",  "lake_undisturbed"))+ #axis limits to show only lakes
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12)) 
+
+
+#assemble n2o plot with zoomed lake inset
+n2o_zoomcombo <- bp1_n2o + inset_element(bp1_n2o_zoomout, left = 0.35, bottom = 0.6, right = 0.995, top = 0.995)+
+  theme(axis.text = element_text(size = 11), axis.title = element_text(size = 12),
+        plot.margin = margin(t = 1, r = 2, b = 1, l = 2)  # reduce whitespace
+        )
+
+
+#put all 3 gases together; using patchwork package
+megaplot <- (bp1_co2 / ch4_zoomcombo / n2o_zoomcombo )+
+  plot_layout(guides = "auto") 
+megaplot #print plot
+
+#export plot
+ggsave(megaplot, 
+       filename = "plots/ghgflux_byzone.png",
+       device = "png",
+       height = 9, width = 6.5, units = "in") 
+```
+
+Statistical analyses of box plot groupings (Figure 2)
+```{r}
+## CO2
+#shapiro test to assess normality
+with(allzones_ghgflux, tapply( co2_mg_c_m2_h, type_zone, shapiro.test)) #test each type_zone group
+# Levene's test for homogeneity of variance on non-normal data
+leveneTest(co2_mg_c_m2_h ~ type_zone, data = allzones_ghgflux)
+#Kruskal-wallis test for non-parametric data
+kruskal(allzones_ghgflux$co2_mg_c_m2_h, allzones_ghgflux$type_zone, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+
+## CH4
+#shapiro test to assess normality
+with(allzones_ghgflux, tapply( ch4_mg_c_m2_h, type_zone, shapiro.test)) #test each type_zone group
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(ch4_mg_c_m2_h ~ type_zone, data = allzones_ghgflux)
+#Kruskal-wallis test for non-parametric data
+kruskal(allzones_ghgflux$ch4_mg_c_m2_h, allzones_ghgflux$type_zone, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+
+## N2O
+#shapiro test to assess normality
+with(allzones_ghgflux, tapply( n2o_mg_m2_h, type_zone, shapiro.test))
+# Levene's test for homogeneity of variance on non-normal data
+leveneTest(n2o_mg_m2_h ~ type_zone, data = allzones_ghgflux)
+#Kruskal-wallis for non-parametric data
+kruskal(allzones_ghgflux$n2o_mg_m2_h, allzones_ghgflux$type_zone, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+```
+
+#############################################
+Figure S4 - Lake FN2O with hot moment removed
+##############################################
+
+Statistical analysis
+```{r}
+#remove N2O hot moment on 31 July 2023
+n2o_noLakeHM <- allzones_ghgflux %>% 
+  filter(sampling_date != as.POSIXct("2023-07-31", tz = "MST", format = "%Y-%m-%d")) %>% 
+           filter(flux_type == "lake") #lake data only
+#check output - note not in date order
+unique(n2o_noLakeHM$sampling_date)
+
+#shapiro test for normality
+with(n2o_noLakeHM, tapply( n2o_mg_m2_h, type_zone, shapiro.test))
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(n2o_mg_m2_h ~ type_zone, data = n2o_noLakeHM)
+#Kruskal-Wallis test
+kruskal(n2o_noLakeHM$n2o_mg_m2_h, n2o_noLakeHM$type_zone, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+```
+
+Create plot - Figure S4
+```{r}
+#plot
+bp_n2ohm <- ggplot(n2o_noLakeHM, 
+                  aes(x = factor(type_zone, levels = zone_order_lake), 
+                      y = n2o_mg_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", linewidth = 0.5) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone", breaks = zone_order_lake, labels = labels_tz_lake) +
+  xlab(NULL) +
+  xlim(c("lake_disturbed","lake_center",  "lake_undisturbed"))+ #axis limits to show only lake
+  ylab(expression(F[N2O]~ (mg~m^{-2}~h^{-1}))) +
+  scale_y_continuous(limits = c(-0.3, 0.3),
+                     breaks = seq(-0.3, 0.3, by = 0.1),
+                     labels = scales::number_format(accuracy = 0.1)) +
+  scale_x_discrete(labels = labels_tz_lake, guide = guide_axis(angle = 45)) + #rotate x-axis labels 45 deg
+  annotate("text", x = c(1,2,3), y = -0.2, label = c("a", "b", "ab"), size = 4)+
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12), 
+        legend.position = "none")
+bp_n2ohm #print plot
+
+#export plot
+ggsave(bp_n2ohm,
+       filename = "plots/laken2o_noHM.png",
+       device = "png",
+       height = 5, width = 5, units = "in")
+```
+
+############################################### 
+Figure S3 - Tundra CO2 component fluxes (ER, GPP)
+###############################################
+
+Statistical analyses of differences between sampling zones
+```{r}
+#Filter to tundra data only
+tundra_ghgflux <- allzones_ghgflux %>%
+  filter(flux_type == "tundra")
+
+## ER
+#shapiro test for normality
+with(tundra_ghgflux, tapply( er_mg_c_m2_h, type_zone, shapiro.test))
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(er_mg_c_m2_h ~ type_zone, data = tundra_ghgflux)
+#mann-whitney u test for non-parametric data
+wilcox.test(er_mg_c_m2_h ~ type_zone, data = tundra_ghgflux)
+
+## GPP
+#shapiro test for normality
+with(tundra_ghgflux, tapply( gpp_mg_c_m2_h, type_zone, shapiro.test))
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(gpp_mg_c_m2_h ~ type_zone, data = tundra_ghgflux)
+#mann-whitney u test for non-parametric data
+# H1: tundra_disturbed (group 1) is more negative - aka less than undisturbed
+wilcox.test(gpp_mg_c_m2_h ~ type_zone, data = tundra_ghgflux, alternative = "less")
+```
+
+Create Figure S3
+```{r}
+## ER
+# Calculate minimum y-value to place annotation AND sample size for each group
+ann_pos_er <- tundra_ghgflux %>% 
+  group_by(type_zone) %>% 
+  summarise(
+    ymin = min(er_mg_c_m2_h, na.rm = TRUE),
+    n = sum(!is.na(er_mg_c_m2_h))   # counts non-NA co2 values
+  ) %>% 
+  mutate(
+    x = factor(type_zone, levels = zone_order_tundra),
+    y1 = ymin - 0.1 * diff(range(tundra_ghgflux$er_mg_c_m2_h, na.rm = TRUE))  
+  )
+
+#plot
+tundra_er <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order_tundra), 
+                      y = er_mg_c_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone", breaks = zone_order_tundra, labels = labels_tz_tundra) +
+  xlab(NULL) +
+  ylab(expression(ER~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-500, 300, by = 100), limits = c(-600, 300))+
+  geom_text(data = ann_pos_er, #annotation line (dynamic sample counts)
+            aes(x = x, y = y1, label = n),
+            fontface = "italic", size = 4) +
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "bottom",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12)) 
+
+## GPP
+# Calculate minimum y-value to place annotation AND sample size for each group
+ann_pos_gpp <- tundra_ghgflux %>% 
+  group_by(type_zone) %>% 
+  summarise(
+    ymin = min(gpp_mg_c_m2_h, na.rm = TRUE),
+    n = sum(!is.na(gpp_mg_c_m2_h))   # counts non-NA co2 values
+  ) %>% 
+  mutate(
+    x = factor(type_zone, levels = zone_order_tundra),
+    y1 = ymin - 0.1 * diff(range(tundra_ghgflux$gpp_mg_c_m2_h, na.rm = TRUE))  
+  )
+
+#plot
+tundra_gpp <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(type_zone, levels = zone_order_tundra), 
+                      y = gpp_mg_c_m2_h)) +
+  geom_boxplot(aes(fill = type_zone))+
+  scale_fill_manual(values = pal_option2, name = "Sampling zone", breaks = zone_order_tundra, labels = labels_tz_tundra) +
+  xlab(NULL) +
+  ylab(expression(GPP~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-500, 300, by = 100), limits = c(-600, 300))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  annotate("text", x = 1.5, y = 225, label = c("*"), size = 12)+ #mark significant difference
+  geom_text(data = ann_pos_gpp, #annotation line (dynamic sample counts)
+            aes(x = x, y = y1, label = n),
+            fontface = "italic", size = 4) +
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12)) 
+
+#put panels together; using patchwork package
+components_co2plot <- (tundra_er + tundra_gpp )+
+  plot_layout(guides = "collect")& 
+  theme(legend.position = 'bottom', legend.text = element_text(size = 11),legend.title = element_text(size = 12))
+components_co2plot #print plot
+
+#export plot
+ggsave(components_co2plot, 
+       filename = "plots/componentsco2_boxplot.png",
+       device = "png",
+       height = 4.5, width = 6.5, units = "in")
+```
+
+###############################
+Table S5 - Summary of ghg fluxes
+###############################
+
+```{r}
+#Summary flux data tables - calculate mean, sd, median, quartiles 
+#group by sampling zone
+sumtab_byzone <- allzones_ghgflux %>% 
+  dplyr::group_by(type_zone) %>% 
+  summarise(across(
+    .cols = where(is.numeric), 
+    .fns = list(mean = ~mean(.x, na.rm = T), 
+                sd = ~sd(.x, na.rm = T), 
+                med = ~median(.x, na.rm = T),
+                q1 = ~quantile(.x, probs = 0.25, na.rm = T),
+                q3 = ~quantile(.x, probs = 0.75, na.rm = T)),
+    .names = "{col}_{fn}"
+  )) 
+sumtab_byzone
+
+#group by lakes v tundra (all sampling zones)
+sumtab_bysystem <- allzones_ghgflux %>% 
+  dplyr::group_by(flux_type) %>% 
+  summarise(across(
+    .cols = where(is.numeric), 
+    .fns = list(mean = ~mean(.x, na.rm = T), 
+                sd = ~sd(.x, na.rm = T), 
+                med = ~median(.x, na.rm = T),
+                q1 = ~quantile(.x, probs = 0.25, na.rm = T),
+                q3 = ~quantile(.x, probs = 0.75, na.rm = T)),
+    .names = "{col}_{fn}"
+  )) 
+sumtab_bysystem
+```
+
+########################################
+Figure 3 - Vegetated vs. bare soil fluxes
+#######################################
+
+```{r}
+#use data subset of tundra zones only
+#add new var to easily plot barren, veg, and stable
+tundra_ghgflux$zone_veg <- paste(tundra_ghgflux$sampling_zone, tundra_ghgflux$vegetated, sep = "_")
+
+#setup plot aestherics
+#manual labeling order for tundra
+zone_order_barren <- c("undisturbed_y", "disturbed_y", "disturbed_n")
+labels_barren <- c("vegetated stable", "vegetated eroding", "bare soil eroding") #manual labels
+
+#color palette
+pal_veg <- c(undisturbed_y = "lightgreen", disturbed_y = "darkgreen", disturbed_n = "brown" )
+
+# 3 panel plot to show FCO2 vs ER vs GPP
+
+## FCO2
+veg_fco2 <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(zone_veg, levels = zone_order_barren), 
+                      y = co2_mg_c_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = zone_veg))+
+  scale_fill_manual(values = pal_veg, name = "Sampling zone", breaks = zone_order_barren, labels = labels_barren) +
+  xlab(NULL) +
+  ylab(expression(F[CO2]~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-500, 300, by = 100), limits = c(-500, 300))+
+  annotate("text", x = c(1,2,3), y = 275, label = c("a", "b","a"), size = 4)+ #Kruskal Wallis groupings
+  annotate("text", x = c(1,2,3), y = -500, label = c("101", "53","36"), fontface = "italic", size = 4)+ #sample count, manually determined
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12)) 
+
+## ER
+veg_er <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(zone_veg, levels = zone_order_barren), 
+                      y = er_mg_c_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = zone_veg))+
+  scale_fill_manual(values = pal_veg, name = "Tundra type", breaks = zone_order_barren, labels = labels_barren) +
+  xlab(NULL) +
+  ylab(expression(ER~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-500, 300, by = 100), limits = c(-500, 300))+
+  annotate("text", x = c(1,2,3), y = 275, label = c("b", "a","c"), size = 4)+ #Kruskal Wallis groupings
+  annotate("text", x = c(1,2,3), y = -500, label = c("100", "62","37"),fontface = "italic", size = 4)+ #manual sample counts
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none", 
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12), legend.text = element_text(size = 11)) 
+
+## GPP
+veg_gpp <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(zone_veg, levels = zone_order_barren), 
+                      y = gpp_mg_c_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = zone_veg))+
+  scale_fill_manual(values = pal_veg, name = "Sampling zone", breaks = zone_order_barren, labels = labels_barren) +
+  xlab(NULL) +
+  ylab(expression(GPP~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-500, 300, by = 100), limits = c(-500, 300))+
+  annotate("text", x = c(1,2,3), y = 275, label = c("b", "c","a"), size = 4)+ #Kruskal Wallis groupings
+  annotate("text", x = c(1,2,3), y = -500, label = c("92", "50","34"), fontface = "italic", size = 4)+ #manual sample counts
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12)) 
+
+## CH4
+veg_ch4 <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(zone_veg, levels = zone_order_barren), 
+                      y = ch4_mg_c_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = zone_veg))+
+  scale_fill_manual(values = pal_veg, name = "Sampling zone", breaks = zone_order_barren, labels = labels_barren) +
+  xlab(NULL) +
+  ylab(expression(F[CH4]~(mg~C~m^{-2}~h^{-1}))) + 
+  annotate("text", x = c(1,2,3), y = 0.1, label = c("b","a","a"), size = 4)+ #Kruskal Wallis groupings
+  annotate("text", x = c(1,2,3), y = -0.15, label = c("111", "67","39"),fontface = "italic", size = 4)+ #manual sample count
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12)) 
+
+## N2O
+veg_n2o <- ggplot(tundra_ghgflux, 
+                  aes(x = factor(zone_veg, levels = zone_order_barren), 
+                      y = n2o_mg_m2_h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", size = 0.5) +
+  geom_boxplot(aes(fill = zone_veg))+
+  scale_fill_manual(values = pal_veg, name = "Microsite & \nsampling zone", breaks = zone_order_barren, labels = labels_barren) +
+  xlab(NULL) +
+  ylab(expression(F[N2O]~(mg~m^{-2}~h^{-1}))) +
+  annotate("text", x = c(1,2,3), y = -0.15, label = c("8", "4","3"),fontface = "italic", size = 4)+ #manual sample count
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1), 
+        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "none",
+        axis.text = element_text(size = 11), axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12), legend.text = element_text(size = 11)) 
+
+## combine all 5 plots; using cowplot package
+library(cowplot)
+# Extract a shared legend from one of the plots
+shared_legend <- get_legend(
+  veg_n2o + theme(legend.position = "right")  # pick one plot for legend
+)
+# Turn the legend into a plot
+veg_legend_plot <- ggdraw(shared_legend)
+
+veg_all_plots <- plot_grid(
+  veg_fco2, veg_er, veg_gpp,
+  veg_ch4, veg_n2o, veg_legend_plot,
+  ncol = 3,
+  align = "hv",
+  rel_heights = c(1, 1),
+  rel_widths = c(1, 1, 1)
+)
+veg_all_plots
+
+#export plot
+#note: some text alignment issues in the legend, fixed in an image editing software
+ggsave(veg_all_plots, 
+       filename = "plots/veg_allfx_boxplot.png",
+       device = "png",
+       height = 5, width = 6.5, units = "in")
+```
+
+statistical analyses of fluxes by vegetated (vegetated vs. bare soil) groupings
+```{r}
+#format zone_veg as a factor
+tundra_ghgflux$zone_veg <- as.factor(tundra_ghgflux$zone_veg)
+
+## FCO2 
+#shapiro test for normality
+with(tundra_ghgflux, tapply( co2_mg_c_m2_h, zone_veg, shapiro.test))
+# Levene's test for homogeneity of variance on non-normal data
+leveneTest(co2_mg_c_m2_h ~ zone_veg, data = tundra_ghgflux)
+#kruskal-wallis test
+kruskal(tundra_ghgflux$co2_mg_c_m2_h, tundra_ghgflux$zone_veg, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+
+## ER
+#shapiro test for normality
+with(tundra_ghgflux, tapply( er_mg_c_m2_h, zone_veg, shapiro.test))
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(er_mg_c_m2_h ~ zone_veg, data = tundra_ghgflux)
+#kruskal-wallis
+kruskal(tundra_ghgflux$er_mg_c_m2_h, tundra_ghgflux$zone_veg, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+
+## GPP
+#shapiro test for normality
+with(tundra_ghgflux, tapply( gpp_mg_c_m2_h, zone_veg, shapiro.test))
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(gpp_mg_c_m2_h ~ zone_veg, data = tundra_ghgflux)
+#kruskal-wallis
+kruskal(tundra_ghgflux$gpp_mg_c_m2_h, tundra_ghgflux$zone_veg, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+
+## CH4
+#shapiro test for normality
+with(tundra_ghgflux, tapply( ch4_mg_c_m2_h, zone_veg, shapiro.test))
+# Levene's test for homogeneity fo variance on non-normal data
+leveneTest(ch4_mg_c_m2_h ~ zone_veg, data = tundra_ghgflux)
+#kruskal-wallis
+kruskal(tundra_ghgflux$ch4_mg_c_m2_h, tundra_ghgflux$zone_veg, p.adj =c("bonferroni"), group = TRUE, console = TRUE)
+
+## not testing N2O, sample size in groups too small (n = 3, 4, 8)
+```

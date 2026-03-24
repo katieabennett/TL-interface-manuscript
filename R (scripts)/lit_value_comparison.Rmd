@@ -1,0 +1,259 @@
+---
+title: "literature value comparison"
+author: "Kathryn Bennett"
+date: "2026-02-08"
+output: html_document
+---
+Create Figure 4 - comparing literature values across tundra and lake site types
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+load packages
+```{r}
+library('dplyr')
+library('purrr')
+library("ggplot2")
+library("tidyr")
+library("cowplot")
+```
+
+import data
+```{r}
+tundra_litvals <- read.csv(file = "data/tundra_lit_comparison_cleaned.csv" )
+lake_litvals <- read.csv(file = "data/lake_lit_comparison_cleaned.csv")
+
+#add labeling column "region (reference)"
+tundra_litvals <- tundra_litvals %>%
+  mutate(p_label = paste0(region, " (", reference, ")"))
+head(tundra_litvals$p_label)
+
+lake_litvals <- lake_litvals %>%
+  mutate(p_label = paste0(region, " (", reference, ")"))
+head(lake_litvals$p_label)
+```
+
+Plotting - Create Figure 4
+
+Tundra plots
+```{r}
+## plot aesthetics
+#create color palette
+tundra_col_pal <- c("#9E0142FF", "#D53E4FFF", "#F46D43FF", "#FDAE61FF", "#FEE08BFF", "#ABDDA4FF", "#66C2A5FF", "#3288BDFF", "#5E4FA2FF")
+#shape palette 
+tundra_shape_pal <- c(21:25) #same for lakes
+#set tundra_type order
+tundra_order <- c("upland tundra", "lichen tundra", "shrub tundra", "unvegetated permafrost", "vegetated permafrost")
+#set manual order to legend entries, put my study first
+tundra_litvals$p_label <- factor(tundra_litvals$p_label,
+                       levels = c("NW Canada (Bennett et al. (this study))",
+                                  sort(setdiff(unique(tundra_litvals$p_label), "NW Canada (Bennett et al. (this study))"))))
+
+pt_size <- 2.4 #universal point size 
+lg_size <- 0.6 #universal legend point size 
+
+## Plotting
+# CO2 tundra
+p_co2 <- ggplot(data = tundra_litvals, 
+                aes(x = factor(tundra_type,levels = tundra_order), y = mean_co2_mgcm2h, 
+                                           fill = p_label, shape = tundra_type))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black")+
+  geom_pointrange(aes(ymin = mean_co2_mgcm2h - sd_co2_mgcm2h, #use geom to jitter with errorbars
+                      ymax = mean_co2_mgcm2h + sd_co2_mgcm2h), 
+                    position=position_jitter(width=0.5), 
+                    linetype='solid', size = 1, stroke = 0.1, #point border thickness
+                  fatten = pt_size) + #point size
+  scale_fill_manual(values = tundra_col_pal, name = NULL)+
+  scale_shape_manual(values = tundra_shape_pal, breaks = tundra_order, name = NULL)+ 
+  ylab(expression(F[CO2]~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-125, 75, by = 25), limits = c(-125, 75), 
+                     expand = c(0, 0))+ #ends axis exactly at limits
+  xlim(c("upland tundra", "lichen tundra", "shrub tundra"))+
+  guides(fill = guide_legend(override.aes = list(shape = 21, size = lg_size, stroke = 0.1)), #both legends plot
+  shape = guide_legend(override.aes = list(fill = "black", size = lg_size)))+
+  coord_cartesian(clip = "off")+ #prevents clipping of shapes
+  theme_classic()+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank(),
+        legend.text = element_text(size = 8), axis.title.y = element_text(size = 10),
+        legend.position = "none") 
+
+# CH4 tundra
+p_ch4 <- ggplot(data = tundra_litvals, aes(x = factor(tundra_type, levels = tundra_order), y = mean_ch4_mgcm2h, 
+                                           fill = p_label, shape = tundra_type))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black")+
+  geom_pointrange(aes(ymin = mean_ch4_mgcm2h - sd_ch4_mgcm2h, #use geom to jitter with errorbars
+                      ymax = mean_ch4_mgcm2h + sd_ch4_mgcm2h), 
+                    position=position_jitter(width=0.5), 
+                    linetype='solid', size = 1, stroke = 0.1,
+                  fatten = pt_size) + #point size
+  scale_fill_manual(values = tundra_col_pal, name = "Source")+
+  scale_shape_manual(values = tundra_shape_pal, breaks = tundra_order, name = "Landcover type")+ 
+  ylab(expression(F[CH4]~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-0.2, 0.2, by = 0.1), limits = c(-0.2, 0.2), 
+                     expand = c(0, 0))+ #ends axis exactly at limits
+   xlim(c("upland tundra", "lichen tundra", "shrub tundra"))+
+  guides(fill = guide_legend(override.aes = list(shape = 21)),
+  shape = guide_legend(override.aes = list(fill = "black")))+
+  coord_cartesian(clip = "off")+ #prevents clipping of shapes
+  theme_classic()+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank(),
+        legend.text = element_text(size = 8), axis.title.y = element_text(size = 10),
+        legend.position = "none") #turn off legend
+
+#N2O tundra
+p_n2o <- ggplot(data = tundra_litvals, aes(x = factor(tundra_type, levels = tundra_order), y = mean_n2o_mgm2h, 
+                                           fill = p_label, shape = tundra_type))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black")+
+  geom_pointrange(aes(ymin = mean_n2o_mgm2h - sd_n2o_mgm2h, #use geom to jitter with errorbars
+                      ymax = mean_n2o_mgm2h + sd_n2o_mgm2h), 
+                    position=position_jitter(width=0.5), 
+                    linetype='solid',  size = 1, stroke = 0.1,
+                  fatten = pt_size) + #point size
+  scale_fill_manual(values = tundra_col_pal, name = "Source")+
+  scale_shape_manual(values = tundra_shape_pal, breaks = tundra_order, name = "Landcover type")+
+  ylab(expression(F[N2O]~(mg~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-0.05, 0.2, by = 0.05), limits = c(-0.05, 0.2), 
+                     expand = c(0, 0))+ #ends axis exactly at limits
+  guides(fill = guide_legend(override.aes = list(shape = 21)),
+  shape = guide_legend(override.aes = list(fill = "black")))+
+  coord_cartesian(clip = "off")+ #prevents clipping of shapes
+  theme_classic()+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank(),
+        legend.text = element_text(size = 8), axis.title.y = element_text(size = 10),
+        legend.position = "none") #turn off legend
+```
+
+Lake plots
+```{r}
+## plot aesthetics
+lake_col_pal <- c("#9E0142FF", "#D53E4FFF", "#F46D43FF", "#FDAE61FF", "#FEE08BFF", "#E6F598FF", "#ABDDA4FF", "#66C2A5FF", "#3288BDFF", "#5E4FA2FF")  
+#shape palette 
+lake_shape_pal <- c(21:24)
+#set lake_type order
+lake_order <- c("thermokarst lakes", "yedoma thermokarst lakes", "boreal lakes", "boreal ponds")
+#legend order, put my study first
+lake_litvals$p_label <- factor(lake_litvals$p_label,
+                       levels = c("NW Canada (Bennett et al. (this study))",
+                                  sort(setdiff(unique(lake_litvals$p_label), "NW Canada (Bennett et al. (this study))"))))
+
+#CO2 lake
+lac_co2 <- ggplot(data = lake_litvals, aes(x = factor(broader_ecosystem_type, levels = lake_order),
+                                           y = mean_co2_mgcm2h, 
+                                           fill = p_label, shape = broader_ecosystem_type))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black")+
+  geom_pointrange(aes(ymin = mean_co2_mgcm2h - sd_co2_mgcm2h, #use geom to jitter with errorbars
+                      ymax = mean_co2_mgcm2h + sd_co2_mgcm2h), 
+                    position=position_jitter(width=0.5), 
+                    linetype='solid', size = 1,stroke = 0.1,
+                  fatten = pt_size) +
+  scale_fill_manual(values = lake_col_pal, name = NULL)+
+  scale_shape_manual(values = lake_shape_pal, breaks = lake_order, name = NULL)+ 
+  ylab(expression(F[CO2]~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-5, 25, by =5), limits = c(-5, 25), 
+                    expand = c(0, 0))+ #ends axis exactly at limits
+  xlim(c("thermokarst lakes", "yedoma thermokarst lakes"))+
+  guides(fill = guide_legend(override.aes = list(shape = 21, size = lg_size, stroke = 0.1)), #guides ensures both legends plot, 
+  shape = guide_legend(override.aes = list(fill = "black", size = lg_size)))+
+  coord_cartesian(clip = "off")+ #prevents clipping of shapes
+  theme_classic()+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank(),
+        legend.text = element_text(size = 8), axis.title.y = element_text(size = 10),
+      legend.position = "none") 
+
+#CH4 lake
+lac_ch4 <- ggplot(data = lake_litvals, aes(x = factor(broader_ecosystem_type, levels = lake_order),
+                                           y = mean_ch4_mgcm2h, 
+                                           fill = p_label, shape = broader_ecosystem_type))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black")+
+  geom_pointrange(aes(ymin = mean_ch4_mgcm2h - sd_ch4_mgcm2h, #use geom to jitter with errorbars
+                      ymax = mean_ch4_mgcm2h + sd_ch4_mgcm2h), 
+                    position=position_jitter(width=0.5), 
+                    linetype='solid', size = 1,stroke = 0.1,
+                  fatten = pt_size) +
+  scale_fill_manual(values = lake_col_pal, name = "Source")+
+  scale_shape_manual(values = lake_shape_pal, breaks = lake_order, name = "Waterbody type")+ 
+  ylab(expression(F[CH4]~(mg~C~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-4, 12, by =2), limits = c(-4, 12), 
+                    expand = c(0, 0))+ #ends axis exactly at limits
+  xlim(c("thermokarst lakes", "yedoma thermokarst lakes"))+
+  guides(fill = guide_legend(override.aes = list(shape = 21)), #ensures both fill and shape legends plot
+  shape = guide_legend(override.aes = list(fill = "black")))+
+  coord_cartesian(clip = "off")+ #prevents clipping of shapes
+  theme_classic()+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank(),
+        legend.text = element_text(size = 8), axis.title.y = element_text(size = 10),
+        legend.position = "none") #turn off legend
+
+#N2O tundra
+lac_n2o <- ggplot(data = lake_litvals, aes(x = factor(broader_ecosystem_type, levels = lake_order),
+                                           y = mean_n2o_mgm2h, 
+                                           fill = p_label, shape = broader_ecosystem_type))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black")+
+  geom_pointrange(aes(ymin = mean_n2o_mgm2h - sd_n2o_mgm2h, #use geom to jitter with errorbars
+                      ymax = mean_n2o_mgm2h + sd_n2o_mgm2h), 
+                    position=position_jitter(width=0.5), 
+                    linetype='solid', size = 1, stroke = 0.1,
+                  fatten = pt_size) +
+  scale_fill_manual(values = lake_col_pal, name = "Source")+
+  scale_shape_manual(values = lake_shape_pal, breaks = lake_order, name = "Waterbody type")+ 
+  ylab(expression(F[N2O]~(mg~m^{-2}~h^{-1}))) + 
+  scale_y_continuous(breaks = seq(-0.2, 0.3, by =0.1), limits = c(-0.2, 0.3), 
+                    expand = c(0, 0))+ #ends axis exactly at limits
+  guides(fill = guide_legend(override.aes = list(shape = 21)), #ensures both fill and shape legends plot
+  shape = guide_legend(override.aes = list(fill = "black")))+
+  coord_cartesian(clip = "off")+ #prevents clipping of shapes
+  theme_classic()+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank(),
+        legend.text = element_text(size = 8), axis.title.y = element_text(size = 10),
+        legend.position = "none") #turn off legend
+```
+
+Assemble plot panels
+```{r}
+#using cowplot
+
+# Extract shared legends, set legend position
+tundra_legend <- get_legend(
+  p_co2 + theme(legend.position = "right"))  
+lac_legend <- get_legend(
+  lac_co2 + theme(legend.position = "right"))  
+
+# Turn the legend into a plot
+tundra_leg_plot <- ggdraw(tundra_legend)
+lac_leg_plot <- ggdraw(lac_legend)
+
+#create row subtitles
+tundra_title <- ggdraw() + draw_label("Tundra", size = 11, fontface = "bold", x = 0.1, hjust = 0)
+  
+lac_title <- ggdraw() + draw_label("Lakes", size = 11, fontface = "bold", x = 0.1, hjust = 0)
+
+#assemble panels
+top_row <- plot_grid(
+  p_co2, p_ch4, p_n2o, tundra_leg_plot,
+  ncol = 4,
+  align = "hv", #align all axes
+  rel_widths = c(1, 1, 1, 2))   #adjust relative height/width proportions
+
+bottom_row <- plot_grid(
+  lac_co2, lac_ch4, lac_n2o, lac_leg_plot,
+  ncol = 4,
+  align = "hv",
+  rel_widths = c(1, 1, 1, 2))
+
+lit_all_plots <- plot_grid(
+  tundra_title, 
+  top_row,
+  lac_title, 
+  bottom_row, 
+  ncol = 1, 
+  rel_heights = c(0.2, 1, 0.2, 1)) #control title spacing
+lit_all_plots
+
+#export plot. Note: further editing done in an image editing software to show full legends etc. 
+ggsave(lit_all_plots, 
+       filename = "plots/lit_comp_plot.png",
+       device = "png",
+       height = 5, width = 6.5, units = "in",
+       scale = 1.2)
+```

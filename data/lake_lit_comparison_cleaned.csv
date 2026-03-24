@@ -1,0 +1,23 @@
+,reference,region,tundra_lake,keep_cut,broader_ecosystem_type,ecosystem_type,method,mean_co2_mgcm2h,sd_co2_mgcm2h,mean_ch4_mgcm2h,sd_ch4_mgcm2h,mean_n2o_mgm2h,sd_n2o_mgm2h
+1,Bennett et al. (this study),NW Canada,lake,,thermokarst lakes,thermokarst lakes (all sampling zones),FC,8.9,12.24,1.7,4.72,0.04,0.21
+2,Matveev et al. 2018,NE Canada,lake,,thermokarst lakes,lithalsa thermokarst lakes,DG,6.16,NA,0.2,NA,NA,NA
+3,Serikova et al. 2019,Siberia,lake,,thermokarst lakes,thermokarst lakes,FC,21.67,NA,2.92,NA,NA,NA
+4,Hughes-Allen et al. 2020,Siberia,lake,,yedoma thermokarst lakes,yedoma thermokarst lakes,DG,15.26,NA,9.91,NA,NA,NA
+5,Kuhn et al. 2021b,ABR,lake,,yedoma thermokarst lakes,yedoma lakes (<0.1 km2),FC + DG,NA,NA,1.8,NA,NA,NA
+6,Kuhn et al. 2021b,ABR,lake,,yedoma thermokarst lakes,yedoma lakes (0.1-10 km2),FC + DG,NA,NA,0.38,NA,NA,NA
+7,Cunada et al. 2021,NW Canada,lake,,thermokarst lakes,thermokarst lakes,FC,NA,NA,3.24,NA,NA,NA
+8,Wik et al. 2016,ABR,lake,,thermokarst lakes,thermokarst lakes,FC + DG,NA,NA,1.04,NA,NA,NA
+9,Soued et al. 2016,NE Canada,lake,,boreal lakes,boreal lakes sources,DG,NA,NA,NA,NA,0.0223748,NA
+10,Soued et al. 2016,NE Canada,lake,,boreal ponds,boreal ponds sinks ,DG,NA,NA,NA,NA,-0.000917,NA
+11,Soued et al. 2016,NE Canada,lake,,boreal ponds,boreal ponds sources,DG,NA,NA,NA,NA,0.0011004,NA
+12,Soued et al. 2016,NE Canada,lake,,boreal lakes,boreal lakes sinks,DG,NA,NA,NA,NA,-0.0062356,NA
+13,Soued et al. 2016,NE Canada,lake,,boreal lakes,boreal lakes sources,DG,NA,NA,NA,NA,0.0089866,NA
+14,Soued et al. 2016,NE Canada,lake,,boreal ponds,boreal ponds sinks,DG,NA,NA,NA,NA,-0.000917,NA
+15,Soued et al. 2016,NE Canada,lake,,boreal ponds,boreal ponds sources,DG,NA,NA,NA,NA,0.0014672,NA
+16,Soued et al. 2016,NE Canada,lake,,boreal lakes,boreal lakes sinks,DG,NA,NA,NA,NA,-0.0093534,NA
+17,Soued et al. 2016,NE Canada,lake,,boreal lakes,boreal lakes sources,DG,NA,NA,NA,NA,0.003668,NA
+18,Huttenen et al. 2003,Finland,lake,,boreal lakes,boreal lake littoral zone (reed),FC,NA,NA,NA,NA,0.034562455,0.007855103
+19,Huttenen et al. 2003,Finland,lake,,boreal lakes,boreal lake littoral zone (reed),FC,NA,NA,NA,NA,-0.001571021,0.007855103
+20,Huttenen et al. 2003,Finland,lake,,boreal lakes,boreal lake littoral zone (water lily),FC,NA,NA,NA,NA,0.001571021,0.001571021
+21,Huttenen et al. 2003,Finland,lake,,boreal lakes,boreal lake  littoral zone (water lily),FC,NA,NA,NA,NA,0.001571021,0.003142041
+22,Pouliot et al. 2025,NE Canada,lake,,thermokarst lakes,thermokarst ponds,FC,NA,NA,NA,NA,-0.005374359,0.095394872

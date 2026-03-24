@@ -1,0 +1,15 @@
+,reference,region,tundra_lake,ecosystem_type,method,mean_co2_mgcm2h,sd_co2_mgcm2h,mean_ch4_mgcm2h,sd_ch4_mgcm2h,mean_n2o_mgm2h,sd_n2o_mgm2h,tundra_type
+1,Bennett et al. (this study),NW Canada,tundra,stable tundra,MC,-26.6863702,84.22535094,-0.024205804,0.026925787,-0.006452412,0.022642394,upland tundra
+2,Virkkala et al. 2024,Finland,tundra,deciduous shrub tundra,MC,-67.08,NA,-0.075,NA,-0.00176,NA,shrub tundra
+3,Virkkala et al. 2024,Finland,tundra,evergreen shrub tundra,MC,-37.92,NA,-0.049,NA,-0.000278,NA,shrub tundra
+4,Juutinen et al. 2022,Siberia,tundra,dwarf shrub tundra,MC,-10.21,NA,-0.012,0.084,NA,NA,shrub tundra
+5,Juutinen et al. 2022,Siberia,tundra,lichen tundra,MC,6.61,NA,-0.072,0.06,NA,NA,lichen tundra
+6,Christensen et al. 2000,Greenland,tundra,heath and snowbed tundra,MC,-6.82,NA,NA,NA,NA,NA,upland tundra
+7,Oechel et al. 2014,Alaska,tundra,tussock tundra,EC,-12.08,NA,NA,NA,NA,NA,upland tundra
+8,Hermesdorf et al. 2023,Greenland,tundra,heath tundra,MC,-15.77,36.38,NA,NA,NA,NA,upland tundra
+9,Kuhn et al. 2021b,ABR,tundra,dry tundra,MC + EC,NA,NA,0.119,NA,NA,NA,upland tundra
+10,Voigt et al. 2023,NW Canada,tundra,lichen tundra,AC,NA,NA,-0.015,0.012,NA,NA,lichen tundra
+11,Voigt et al. 2023,NW Canada,tundra,shrub tundra,AC,NA,NA,-0.018,0.02,NA,NA,shrub tundra
+12,Voigt et al. 2020,Global permafrost regions,tundra,vegetated permafrost ecosystems,MC + CG,NA,NA,NA,NA,0.01,0.027,vegetated permafrost
+13,Voigt et al. 2020,Global permafrost regions,tundra,sparsely and unvegetated permafrost ecosystems,MC + CG,NA,NA,NA,NA,0.067,0.113,unvegetated permafrost
+14,Voigt et al. 2020,Global permafrost regions,tundra,tundra uplands,MC + CG,NA,NA,NA,NA,0.014,0.034,upland tundra
