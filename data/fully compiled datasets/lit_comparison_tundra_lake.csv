@@ -1,0 +1,37 @@
+reference,region,tundra_lake,ecosystem_type,method,mean_co2_mgcm2h,sd_co2_mgcm2h,mean_ch4_mgcm2h,sd_ch4_mgcm2h,mean_n2o_mgm2h,sd_n2o_mgm2h
+Bennett et al. (this study),NW Canada,tundra,upland tundra,MC,-26.6863702,84.22535094,-0.024205804,0.026925787,-0.006452412,0.022642394
+Virkkala et al. 2024,Finland,tundra,shrub tundra,MC,-67.08,NA,-0.075,NA,-0.00176,NA
+Virkkala et al. 2024,Finland,tundra,shrub tundra,MC,-37.92,NA,-0.049,NA,-0.000278,NA
+Juutinen et al. 2022,Siberia,tundra,shrub tundra,MC,-10.21,NA,-0.012,0.084,NA,NA
+Juutinen et al. 2022,Siberia,tundra,lichen tundra,MC,6.61,NA,-0.072,0.06,NA,NA
+Christensen et al. 2000,Greenland,tundra,upland tundra,MC,-6.82,NA,NA,NA,NA,NA
+Oechel et al. 2014,Alaska,tundra,upland tundra,EC,-12.08,NA,NA,NA,NA,NA
+Hermesdorf et al. 2023,Greenland,tundra,upland tundra,MC,-15.77,36.38,NA,NA,NA,NA
+Kuhn et al. 2021b,ABR,tundra,upland tundra,MC + EC,NA,NA,0.119,NA,NA,NA
+Voigt et al. 2023,NW Canada,tundra,lichen tundra,AC,NA,NA,-0.015,0.012,NA,NA
+Voigt et al. 2023,NW Canada,tundra,shrub tundra,AC,NA,NA,-0.018,0.02,NA,NA
+Voigt et al. 2020,Global permafrost regions,tundra,vegetated permafrost,MC + CG,NA,NA,NA,NA,0.01,0.027
+Voigt et al. 2020,Global permafrost regions,tundra,unvegetated permafrost,MC + CG,NA,NA,NA,NA,0.067,0.113
+Voigt et al. 2020,Global permafrost regions,tundra,upland tundra,MC + CG,NA,NA,NA,NA,0.014,0.034
+Bennett et al. (this study),NW Canada,lake,thermokarst lakes,FC,8.9,12.24,1.7,4.72,0.04,0.21
+Matveev et al. 2018,NE Canada,lake,thermokarst lakes,DG,6.16,NA,0.2,NA,NA,NA
+Serikova et al. 2019,Siberia,lake,thermokarst lakes,FC,21.67,NA,2.92,NA,NA,NA
+Hughes-Allen et al. 2020,Siberia,lake,yedoma thermokarst lakes,DG,15.26,NA,9.91,NA,NA,NA
+Kuhn et al. 2021b,ABR,lake,yedoma thermokarst lakes,FC + DG,NA,NA,1.8,NA,NA,NA
+Kuhn et al. 2021b,ABR,lake,yedoma thermokarst lakes,FC + DG,NA,NA,0.38,NA,NA,NA
+Cunada et al. 2021,NW Canada,lake,thermokarst lakes,FC,NA,NA,3.24,NA,NA,NA
+Wik et al. 2016,ABR,lake,thermokarst lakes,FC + DG,NA,NA,1.04,NA,NA,NA
+Soued et al. 2016,NE Canada,lake,boreal lakes,DG,NA,NA,NA,NA,0.0223748,NA
+Soued et al. 2016,NE Canada,lake,boreal ponds,DG,NA,NA,NA,NA,-0.000917,NA
+Soued et al. 2016,NE Canada,lake,boreal ponds,DG,NA,NA,NA,NA,0.0011004,NA
+Soued et al. 2016,NE Canada,lake,boreal lakes,DG,NA,NA,NA,NA,-0.0062356,NA
+Soued et al. 2016,NE Canada,lake,boreal lakes,DG,NA,NA,NA,NA,0.0089866,NA
+Soued et al. 2016,NE Canada,lake,boreal ponds,DG,NA,NA,NA,NA,-0.000917,NA
+Soued et al. 2016,NE Canada,lake,boreal ponds,DG,NA,NA,NA,NA,0.0014672,NA
+Soued et al. 2016,NE Canada,lake,boreal lakes,DG,NA,NA,NA,NA,-0.0093534,NA
+Soued et al. 2016,NE Canada,lake,boreal lakes,DG,NA,NA,NA,NA,0.003668,NA
+Huttenen et al. 2003,Finland,lake,boreal lakes,FC,NA,NA,NA,NA,0.034562455,0.007855103
+Huttenen et al. 2003,Finland,lake,boreal lakes,FC,NA,NA,NA,NA,-0.001571021,0.007855103
+Huttenen et al. 2003,Finland,lake,boreal lakes,FC,NA,NA,NA,NA,0.001571021,0.001571021
+Huttenen et al. 2003,Finland,lake,boreal lakes,FC,NA,NA,NA,NA,0.001571021,0.003142041
+Pouliot et al. 2025,NE Canada,lake,thermokarst lakes,FC,NA,NA,NA,NA,-0.005374359,0.095394872
