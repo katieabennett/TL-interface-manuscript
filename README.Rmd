@@ -16,21 +16,36 @@ The full dataset associated with this manuscript will be publically available at
 ## Repository Structure
 The repository contains the following files:
 
-ghg_flux_plotting.RMD
+R (scripts)
+└── ghg_flux_plotting.RMD
   Script to process, visualize, and apply statistical tests to net CO2, CH4, and N2O, and ecosystem respiration (ER) and gross primary production (GPP) fluxes. 
   associated trimmed data file(s): allzones_ghgflux.csv
 
-LMMs_tundra_lake.RMD
+└── LMMs_tundra_lake.RMD
   Script to apply linear mixed effects models (LMMs) to tundra net CO2 and CH4 fluxes and lake net CO2, CH4, and N2O fluxes. 
   associated trimmed data file(s): lake_lmmdata.csv, tundra_lmmdata.csv
 
-lit_value_comparison.RMD
+└── lit_value_comparison.RMD
   Script to plot curated literature values and compare to values from this study. 
   associated trimmed data file(s): tundra_lit_comparison_cleaned.csv, lake_lit_comparison_cleaned.csv
   
-climate_normals_Inuvik.R
+└── climate_normals_Inuvik.R
   Script to download Environment Canada long-term climate data, compare to the study years, and plot monthly precipitation and air temperature data. 
   associated trimmed data file(s): none
+
+data
+└── allzones_ghgflux.csv - all greenhousegas flux data and identifying information to create flux plots
+└── lake_lit_comparison_cleaned.csv - all lake data collected from literature
+└── tundra_lit_comparison_cleaned.csv - all tundra data collected from literature
+└── lake_lmmdata.csv - all lake greenhouse gas flux data and associated variables used in LMMs
+└── tundra_lmmdata.csv - tundra CO2 and CH4 flux data and associated variables used in LMMs
+└── fully compiled datasets - extended untrimmed datasets
+      └── ghgflux_envars.csv - all tundra and lake CO2, CH4, CO2 fluxes and biogeochemcial variables measured throughout the 2022 and 2023 sampling campaigns
+      └── lake_depth_profiles.csv - lake depth profiles of water temeprature and dissolved oxygen measured in 2023
+      └── lit_comparison_tundra_lake.csv - all tundra and lake data collected from literature
+      └── soil_properties.csv - soil properties (e.g., nutrients, texture) from samples collected in August 2024
+
+plots - collects exported png files of plots created in scripts
 
 ## Citation
 If you use these scripts in your work, please cite the associated publication (citation to be updated upon manuscript publication).
