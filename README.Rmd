@@ -44,7 +44,6 @@ data
       └── lake_depth_profiles.csv - lake depth profiles of water temeprature and dissolved oxygen measured in 2023
       └── lit_comparison_tundra_lake.csv - all tundra and lake data collected from literature
       └── soil_properties.csv - soil properties (e.g., nutrients, texture) from samples collected in August 2024
-      └── tundra_microsite_coordinates.csv - tundra microsite lat lon locations
       └── variable_descriptions.csv - definitions for all variables in data files
 
 plots - collects exported png files of plots created in scripts
