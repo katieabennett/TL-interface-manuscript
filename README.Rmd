@@ -11,7 +11,8 @@ Opposing Responses of Carbon Dioxide and Methane Fluxes Following Thermokarst Er
 This repository contains the R codes and trimmed datasets used in the study "Opposing Responses of Carbon Dioxide and Methane Fluxes Following Thermokarst Erosion Across Tundra-Lake Interfaces in the Western Canadian Arctic", currently under review at AGU Journal of Geophysical Research: Biogeosciences. The R scripts and dataframes provided here replicate the data processing, visualization, and statistical analyses used to produce the results in the manuscript.
 
 ## Data Availability
-The full dataset associated with this manuscript will be publically available at the Zenodo database prior to manuscript publication.The R scripts use trimmed versions of the complete dataset, which are available in this repository. 
+The full dataset associated with this manuscript is publicly available at the Zenodo database, DOI: 10.5281/zenodo.19337194
+The R scripts use trimmed versions of the complete dataset, which are available in this repository. 
 
 ## Repository Structure
 The repository contains the following files:
@@ -49,4 +50,5 @@ data
 plots - collects exported png files of plots created in scripts
 
 ## Citation
-If you use these scripts in your work, please cite the associated publication (citation to be updated upon manuscript publication).
+If you use these data or scripts in your work, please cite the associated publication and/or dataset.
+Bennett, K., Voigt, C., Cornette, L., Drouin-Jacques, J., Gray, C., Maranger, R., Schmidt, B., Tank, S., Vicente-Luis, A., von Sperber, C., & Sonnentag, O. (2026). Opposing Responses of Carbon Dioxide and Methane Fluxes Following Thermokarst Erosion Across Tundra-Lake Interfaces in the Western Canadian Arctic (1.0.0) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.19337195
