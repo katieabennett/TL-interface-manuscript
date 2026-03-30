@@ -1,0 +1,81 @@
+variable name,ecosystem,description
+GHGFLUX_ENVARS.CSV,,
+sampling_date,both,date of measurement
+site,both,site name
+flux_type,both,lake or tundra flux measurement
+sampling_zone,both,"sampling zone: undisturbed = stable in manuscript, disturbed = eroding in manuscript, center = lake center in manuscript"
+type_zone,both,"flux_type and sampling_zone combined to create groups used in manuscript. Lake_disturbed = eroding lakeshore, lake_undisturbed = stable lakeshore, lake_center = lake center, tundra_disturbed = eroding tundra, tundra_undisturbed = stable tundra"
+vegetated,tundra,"yes ""y"" or no ""no"" vegetation cover "
+microsite,both,"microsite label. Numbered 1-4 in lakes and unique identifier codes for tundra indicating site, sampling zone, and numbered 1-4"
+co2_mg_c_m2_h,both,net co2 flux in mg C/m2/h
+ch4_mg_c_m2_h,both,net ch4 flux in mg C/m2/h
+n2o_mg_m2_h,both,net n2o flux in mg/m2/h
+er_mg_c_m2_h,tundra,ecosystem respiration flux in mg C/m2/h
+gpp_mg_c_m2_h,tundra,gross primary production flux in mg C/m2/h
+vwc_percent_mean,tundra,mean volumetric water content (%) for each microsite
+frost_cm_mean,tundra,mean frost table depth (cm) for each microsite
+soil_temp_surface_degc,tundra,near surface soil temperature (°C)
+t_air_mean,tundra,mean air temprature outside of flux chamber during flux measurement  (°C)
+par_mean,tundra,"mean photosynthetically active radiation during uncovered ""light"" flux measurements (umol/m2/s)"
+green_perc,tundra,"Microsite fractional green canopy cover i.e., vegetation greenness (%)"
+tsurf_water_degc,lake,near surface water temperature (°C)
+ec_water_uscm,lake,near surface water electrical conductivity (uS/cm)
+ph_water,lake,near surface water pH
+do_mg_l,lake,dissolved oxygen (mg/L)
+doc_mg_l,lake,dissolved organic carbon (mg/L)
+tn_ug_l,lake,total nitrogen (ug/L)
+tdn_ug_l,lake,total dissolved nitrogen (ug/L)
+no3_ug_l,lake,NO3- (ug/L)
+nh4_ug_l,lake,NH4+ (ug/L)
+tp_ug_l,lake,total phosphorus (ug/L)
+tdp_ug_l,lake,total dissolved phosphorus (ug/L)
+po4_ug_l,lake,PO43- (ug/L)
+max_depth_cm,lake,lake maximum measured depth
+area_km2,lake,lake surface area
+zone_depth_m,lake,depth of sampling zone
+,,
+LAKE_DEPTH_PROFILES.CSV,,
+site,lake,site name
+date,lake,date of measurement
+depth_of_measure_cm,lake,depth of measuremnt in 20cm increments (cm)
+temp_c,lake,water temperaure (°C)
+do_mg_l,lake,dissolved oxygen (mg/L)
+sampling_zone,lake,sampling zone: center = lake center in manuscript
+,,
+SOIL_PROPERTIES.CSV,,
+soil_type,tundra,soil layer classification: mineral or organic. 
+ec_soil_uscm,tundra,soil electrical conductivity (uS/cm)
+ph_soil,tundra,soil pH
+n_percent,tundra,soil total nitrogen content (%)
+c_percent,tundra,soil total carbon content (%)
+nh4_mgkg_freshsoil,tundra,NH4+ measured on fresh soil (mg/kg)
+no3_mgkg_freshsoil,tundra,NO3- measured on fresh soil (mg/kg)
+po4_mgkg_freshsoil,tundra,PO43- measured on fresh soil (mg/kg)
+cn_ratio,tundra,soil total carbon:total nitrogen
+total_clay_mean,tundra,"soil total clay content (%), averaged by sampling zone at each site (e.g., LB stable tundra, LB eroding tundra, etc.)"
+clay_sd,tundra,"standard deviation for soil total clay content (%), grouped by sampling zone at each site (e.g., LB stable tundra, LB eroding tundra, etc.)"
+total_silt_mean,tundra,"soil total silt content (%), averaged by sampling zone at each site (e.g., LB stable tundra, LB eroding tundra, etc.)"
+silt_sd,tundra,"standard deviation for soil total silt content (%), averaged by sampling zone at each site (e.g., LB stable tundra, LB eroding tundra, etc.)"
+total_sand_mean,tundra,"soil total clay content (%), averaged by sampling zone at each site (e.g., LB stable tundra, LB eroding tundra, etc.)"
+sand_sd,tundra,"standard deviation for soil total clay content (%), averaged by sampling zone at each site (e.g., LB stable tundra, LB eroding tundra, etc.)"
+,,
+LIT_COMPARISON_TUNDRA_LAKE.CSV,,
+reference,both,literature reference for data points
+region,both,"region of data collection location. ABR = Arctic boreal region, "
+tundra_lake,both,"ecosystem, tundra or lake"
+ecosystem_type,both,"descriptive ecosystem type (e.g., upland tundra, shrub tundra, thermokarst lake, etc.). Defined for this manuscript based on reference site description. "
+method,both,"flux collection method. Manual chamber (MC), automated chamber (AC), eddy covariance (EC), concentration gradient (CG), floating chamber (FC), or dissolved gas concentrations (DG). + indicates combined methods to calculate reported value. "
+mean_co2_mgcm2h,both,mean net co2 flux in mg C/m2/h as reported in literature
+sd_co2_mgcm2h,both,standard deviation net co2 flux in mg C/m2/h as reported in literature
+mean_ch4_mgcm2h,both,mean net ch4 flux in mg C/m2/h as reported in literature
+sd_ch4_mgcm2h,both,standard deviation net ch4 flux in mg C/m2/h as reported in literature
+mean_n2o_mgm2h,both,mean net n2o flux in mg/m2/h as reported in literature
+sd_n2o_mgm2h,both,standard deviation net n2o flux in mg/m2/h as reported in literature
+,,
+TUNDRA_MICROSITE_COORDINATES.CSV,,
+site,tundra,site name
+microsite,tundra,"microsite label. unique identifier codes for tundra indicating site, sampling zone, and numbered 1-4"
+latitude,tundra,latitude ± 3m (decimal degrees)
+longitude,tundra,longitude ± 3m (decimal degrees)
+point_type,tundra,location type
+HOBO_templogger,tundra,yes/no presence of HOBO pendant temperature data logger to measure near surface soil temperature
