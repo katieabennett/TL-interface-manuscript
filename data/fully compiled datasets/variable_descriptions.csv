@@ -33,6 +33,8 @@ po4_ug_l,lake,PO43- (ug/L)
 max_depth_cm,lake,lake maximum measured depth
 area_km2,lake,lake surface area
 zone_depth_m,lake,depth of sampling zone
+latitude,tundra,"latitude ± 3m (decimal degrees). Locations for tundra rows are for individual microsites (e.g., LBI1), locations for lake rows are for the site (e.g., LB)"
+longitude,tundra,"longitude ± 3m (decimal degrees). Locations for tundra rows are for individual microsites (e.g., LBI1), locations for lake rows are for the site (e.g., LB)"
 ,,
 LAKE_DEPTH_PROFILES.CSV,,
 site,lake,site name
@@ -71,11 +73,3 @@ mean_ch4_mgcm2h,both,mean net ch4 flux in mg C/m2/h as reported in literature
 sd_ch4_mgcm2h,both,standard deviation net ch4 flux in mg C/m2/h as reported in literature
 mean_n2o_mgm2h,both,mean net n2o flux in mg/m2/h as reported in literature
 sd_n2o_mgm2h,both,standard deviation net n2o flux in mg/m2/h as reported in literature
-,,
-TUNDRA_MICROSITE_COORDINATES.CSV,,
-site,tundra,site name
-microsite,tundra,"microsite label. unique identifier codes for tundra indicating site, sampling zone, and numbered 1-4"
-latitude,tundra,latitude ± 3m (decimal degrees)
-longitude,tundra,longitude ± 3m (decimal degrees)
-point_type,tundra,location type
-HOBO_templogger,tundra,yes/no presence of HOBO pendant temperature data logger to measure near surface soil temperature
